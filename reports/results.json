@@ -1,0 +1,96 @@
+{
+  "dataset_sha256": "56c885f84457f6680f8438f02bfcdac9579323d8a94465ee5f26e32baa727602",
+  "seed": 42,
+  "n": 30000,
+  "features": [
+    "LIMIT_BAL",
+    "PAY_0",
+    "PAY_2",
+    "PAY_3",
+    "PAY_4",
+    "PAY_5",
+    "PAY_6",
+    "BILL_AMT1",
+    "BILL_AMT2",
+    "BILL_AMT3",
+    "BILL_AMT4",
+    "BILL_AMT5",
+    "BILL_AMT6",
+    "PAY_AMT1",
+    "PAY_AMT2",
+    "PAY_AMT3",
+    "PAY_AMT4",
+    "PAY_AMT5",
+    "PAY_AMT6"
+  ],
+  "default_rate": 0.2212,
+  "duplicate_predictor_rows": 817,
+  "splits": {
+    "train": {
+      "n": 17975,
+      "default_rate": 0.22047287899860918
+    },
+    "validation": {
+      "n": 6015,
+      "default_rate": 0.22593516209476308
+    },
+    "test": {
+      "n": 6010,
+      "default_rate": 0.21863560732113144
+    }
+  },
+  "validation": {
+    "logistic": {
+      "roc_auc": 0.7120983250267404,
+      "pr_auc_ap": 0.47410542847772635,
+      "ks": 0.3699491932363852,
+      "brier": 0.15104765469131037,
+      "log_loss": 0.4810018423689424,
+      "ece_10": 0.03883302408553479
+    },
+    "boosting": {
+      "roc_auc": 0.7736586179953423,
+      "pr_auc_ap": 0.5285875000484326,
+      "ks": 0.41939902369085813,
+      "brier": 0.14091702103059073,
+      "log_loss": 0.4432539442860107,
+      "ece_10": 0.013640788256153532
+    }
+  },
+  "test": {
+    "logistic": {
+      "roc_auc": 0.7223052781083807,
+      "pr_auc_ap": 0.5042757109871452,
+      "ks": 0.3746026282285646,
+      "brier": 0.1439360531326681,
+      "log_loss": 0.4641441551111315,
+      "ece_10": 0.04688173592641845,
+      "roc_auc_ci95": [
+        0.7045597601758,
+        0.7378175367871891
+      ]
+    },
+    "boosting": {
+      "roc_auc": 0.7795003973717713,
+      "pr_auc_ap": 0.5573721799587117,
+      "ks": 0.43547181577507593,
+      "brier": 0.13274101955018885,
+      "log_loss": 0.4247481929947237,
+      "ece_10": 0.011387697684478228,
+      "roc_auc_ci95": [
+        0.7653918272090707,
+        0.7943626470348099
+      ]
+    }
+  },
+  "selected_on_validation": "boosting",
+  "bootstrap_replicates": 300,
+  "sql_reconciled": true,
+  "environment": {
+    "python": "3.13.0",
+    "numpy": "2.3.5",
+    "pandas": "2.3.3",
+    "sklearn": "1.6.1"
+  },
+  "split_manifest_sha256": "09f40f9797a3538d45b513f50b6b05afbb7e05b8bdaeb3f22131432a60467448"
+}
