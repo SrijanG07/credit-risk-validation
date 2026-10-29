@@ -20,12 +20,31 @@ from .data import load_data, split_data, FEATURES, TARGET, SHA256, PAY
 from .metrics import evaluate, bootstrap_auc, psi
 from .report import write_report
 
-def reconcile(root, df, predictions):
+def reconcile(root, df, predictions, expected_ids=None, expected_models=None):
+    """Reconcile calculations and, when supplied, an independent scoring roster.
+
+    Arithmetic agreement alone cannot detect records dropped from both reports.
+    The pipeline therefore supplies the held-out IDs and model names separately.
+    """
+    if predictions.empty:
+        raise ValueError("Empty predictions")
+    if predictions[["ID", "model", "probability"]].isna().any().any():
+        raise ValueError("Missing prediction fields")
+    probabilities = predictions.probability.to_numpy()
+    if not np.isfinite(probabilities).all() or ((probabilities < 0) | (probabilities > 1)).any():
+        raise ValueError("Invalid prediction probabilities")
+    if predictions.duplicated(["model", "ID"]).any():
+        raise ValueError("Duplicate prediction keys")
+    if expected_models is not None and set(predictions.model) != set(expected_models):
+        raise ValueError("Prediction model coverage mismatch")
+    if expected_ids is not None:
+        roster = set(expected_ids)
+        for _, frame in predictions.groupby("model"):
+            if set(frame.ID) != roster:
+                raise ValueError("Prediction ID coverage mismatch")
     with sqlite3.connect(root / "artifacts/portfolio.sqlite") as con:
         df.to_sql("borrowers", con, if_exists="replace", index=False)
         predictions.to_sql("predictions", con, if_exists="replace", index=False)
-        if predictions.duplicated(["model", "ID"]).any():
-            raise ValueError("Duplicate prediction keys")
         unmatched = con.execute("SELECT COUNT(*) FROM predictions p LEFT JOIN borrowers b ON p.ID=b.ID WHERE b.ID IS NULL").fetchone()[0]
         if unmatched:
             raise ValueError("Unmatched prediction IDs")
@@ -73,7 +92,7 @@ def run(root, bootstrap=300):
     for name, ix in partitions.items():
         assignments.loc[ix, "split"] = name
     assignments.to_csv(root / "artifacts/splits.csv", index=False)
-    sql, segments = reconcile(root, df, predictions)
+    sql, segments = reconcile(root, df, predictions, expected_ids=test.ID, expected_models=models)
     sql.to_csv(root / "reports/sql_reconciliation.csv", index=False)
     segments.to_csv(root / "reports/segments.csv", index=False)
     # Monitoring is reference-vs-holdout and explicitly synthetic adverse covariate shift.

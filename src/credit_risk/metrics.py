@@ -4,7 +4,11 @@ from sklearn.metrics import roc_auc_score, average_precision_score, roc_curve, b
 
 def evaluate(y, p):
     y, p = np.asarray(y), np.asarray(p)
-    if len(y) != len(p) or not np.isfinite(p).all() or np.any((p < 0) | (p > 1)):
+    if y.ndim != 1 or p.ndim != 1 or len(y) == 0 or len(y) != len(p):
+        raise ValueError("Expected nonempty one-dimensional labels and probabilities of equal length")
+    if not np.isin(y, [0, 1]).all() or np.unique(y).size != 2:
+        raise ValueError("Evaluation requires binary labels with both classes present")
+    if not np.isfinite(p).all() or np.any((p < 0) | (p > 1)):
         raise ValueError("Invalid probabilities")
     fpr, tpr, _ = roc_curve(y, p)
     bins = np.minimum((p * 10).astype(int), 9)
@@ -15,6 +19,9 @@ def bootstrap_auc(y, p, groups, n=300, seed=2026):
     """Cluster bootstrap: identical predictor records are sampled as units."""
     rng = np.random.default_rng(seed)
     y, p, groups = np.asarray(y), np.asarray(p), np.asarray(groups)
+    evaluate(y, p)
+    if groups.ndim != 1 or len(groups) != len(y) or n < 20:
+        raise ValueError("Bootstrap requires aligned groups and at least 20 replicates")
     unique = np.unique(groups)
     lookup = {g: np.flatnonzero(groups == g) for g in unique}
     values = []
@@ -22,6 +29,8 @@ def bootstrap_auc(y, p, groups, n=300, seed=2026):
         ix = np.concatenate([lookup[g] for g in rng.choice(unique, len(unique), replace=True)])
         if np.unique(y[ix]).size == 2:
             values.append(roc_auc_score(y[ix], p[ix]))
+    if len(values) < 20:
+        raise ValueError("Insufficient two-class bootstrap samples for an interval")
     return [float(v) for v in np.quantile(values, [.025, .975])]
 
 def psi(reference, current, bins=10):

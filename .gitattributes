@@ -1,0 +1,2 @@
+# Reports are generated outputs, not the project's implementation language.
+reports/** linguist-generated=true

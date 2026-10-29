@@ -2,6 +2,8 @@
 
 An original Python/SQL portfolio study of **behavioral credit-card default prediction**, with leakage-aware evaluation, independent report reconciliation and drift monitoring. Designed around the development, validation, monitoring and reporting skills in a risk-model analyst internship. No affiliation with Citi; no proprietary bank data.
 
+**Where is the Python?** Start with [`src/credit_risk/pipeline.py`](src/credit_risk/pipeline.py): it trains both models, evaluates them, runs monitoring and builds the report. [`data.py`](src/credit_risk/data.py) handles ingestion/splits; [`metrics.py`](src/credit_risk/metrics.py) implements evaluation/PSI; [`report.py`](src/credit_risk/report.py) renders the outputs. The large HTML file is generated output containing an embedded chart, not the modeling implementation. Reports are marked generated in `.gitattributes` so they do not dominate GitHub's language statistics.
+
 ![Held-out validation results](reports/validation.png)
 
 ## Measured results
@@ -48,7 +50,9 @@ Run `python -m credit_risk.pipeline --bootstrap 1000` for a larger bootstrap. Th
 3. **Duplicate-aware split:** group identical predictor vectors, even with conflicting labels; use five stratified group folds for roughly 60/20/20 partitions. There are 817 repeated predictor rows. No group crosses boundaries. Grouping by predictors is conservative; IDs do not establish longitudinal borrower history.
 4. **Training-only fitting:** logistic imputation/scaling inside a pipeline. Fixed boosting configuration; grouped 3-fold training-only sigmoid calibration. No resampling, target encoding, feature selection or test-driven hyperparameter search.
 5. **Validation selects; test evaluates:** both predefined candidates receive final test metrics. Cluster-bootstrap AUC uncertainty accounts for duplicate groups, but not retraining uncertainty.
-6. **Integrity:** explicit SQL joins, CTE and aggregation independently reconcile row count, defaults, observed/predicted rates and Brier with pandas. Unknown IDs and duplicate prediction keys fail closed.
+6. **Integrity:** explicit SQL joins, CTE and aggregation independently reconcile row count, defaults, observed/predicted rates and Brier with pandas. An independent held-out ID roster and model roster detect missing predictions; unknown IDs, duplicate keys, missing/nonfinite values and invalid probabilities fail closed.
+
+CI also runs the actual training-to-report pipeline against a small synthetic fixture, checking split isolation, prediction coverage and generated artifacts. That fixture tests software integration only; all published performance numbers come from the UCI run.
 
 This is **not out-of-time validation**: the dataset supplies a single historical cohort. Random splits cannot estimate temporal generalization. No fabricated dates, future outcomes, expected losses or regulatory-compliance claims are used.
 
